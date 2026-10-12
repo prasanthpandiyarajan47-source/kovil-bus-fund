@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kovil Bus Fund</title>
+<style>
+body{font-family:Arial;background:#fff8ed;color:#321e20;margin:0;padding:16px}
+header{background:#641d2d;color:white;text-align:center;padding:20px;border-radius:14px}
+.card{background:white;padding:15px;margin-top:14px;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input[type=text],input[type=number]{padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px;width:90%}
+button{padding:11px;border:0;border-radius:8px;background:#641d2d;color:white;font-size:15px;margin-top:8px}
+.member{display:flex;align-items:center;gap:9px;border-bottom:1px solid #eee;padding:12px 0}
+.member input{width:22px;height:22px}
+.name{flex:1;overflow-wrap:anywhere}
+.remove{background:#f5dddd;color:#822}
+</style>
+</head>
+<body>
+<header><h1>🛕 Kovil Bus Fund</h1><p>Common Amount Collection</p></header>
+
+<div class="card">
+<label>Common amount per person (₹)</label><br><br>
+<input id="amount" type="number" min="0" placeholder="Example: 500">
+</div>
+
+<div class="card">
+<h2>Total Collected: <span id="total">₹0</span></h2>
+<p>Members paid: <b id="count">0 / 0</b></p>
+<p>Pending amount: <b id="pending">₹0</b></p>
+</div>
+
+<div class="card">
+<h3>Add Member</h3>
+<input id="newName" type="text" placeholder="Member name">
+<br><button onclick="addMember()">+ Add Name</button>
+</div>
+
+<div class="card">
+<h3>Member List</h3>
+<div id="list"></div>
+</div>
+
+<div class="card">
+<button onclick="window.print()">Print / Save as PDF</button>
+<p style="font-size:12px;color:#777">Data indha phone browser-la save aagum.</p>
+</div>
+
+<script>
+let members=[];
+try{members=JSON.parse(localStorage.getItem("kovilFundMembers")||"[]")}catch(e){}
+document.getElementById("amount").value=localStorage.getItem("kovilFundAmount")||"";
+
+function money(n){return "₹"+Number(n).toLocaleString("en-IN")}
+function save(){
+localStorage.setItem("kovilFundMembers",JSON.stringify(members));
+localStorage.setItem("kovilFundAmount",document.getElementById("amount").value);
+}
+function render(){
+let a=Math.max(0,Number(document.getElementById("amount").value)||0);
+let paid=members.filter(m=>m.paid).length;
+document.getElementById("total").textContent=money(paid*a);
+document.getElementById("count").textContent=paid+" / "+members.length;
+document.getElementById("pending").textContent=money((members.length-paid)*a);
+let list=document.getElementById("list");list.innerHTML="";
+members.forEach((m,i)=>{
+let row=document.createElement("div");row.className="member";
+let c=document.createElement("input");c.type="checkbox";c.checked=m.paid;
+c.onchange=()=>{members[i].paid=c.checked;save();render()};
+let n=document.createElement("span");n.className="name";n.textContent=m.name+" — "+(m.paid?"Paid":"Pending");
+let r=document.createElement("button");r.className="remove";r.textContent="X";
+r.onclick=()=>{if(confirm("Remove "+m.name+"?")){members.splice(i,1);save();render()}};
+row.append(c,n,r);list.append(row);
+});
+if(!members.length)list.textContent="Add member names above.";
+}
+function addMember(){
+let f=document.getElementById("newName"),n=f.value.trim();
+if(!n){alert("Member name enter pannu");return}
+members.push({name:n,paid:false});f.value="";save();render();
+}
+document.getElementById("amount").addEventListener("input",()=>{save();render()});
+render();
+</script>
+</body>
+</html>
